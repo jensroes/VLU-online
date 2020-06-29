@@ -1,0 +1,319 @@
+---
+title             : "Online Experiment"
+shorttitle             : "vls"
+
+author: 
+  - name          : "Jens Roeser and Harriet Smith"
+    affiliation   : "1"
+    address       : "50 Shakespeare St, Nottingham NG1 4FQ"
+    corresponding : yes    # Define only one corresponding author
+    email         : "jens.roeser@ntu.ac.uk"
+
+affiliation:
+  - id            : "1"
+    institution   : "Nottingham Trent University"
+
+bibliography      : ["ref.bib"]
+
+class             : "man"
+#class             : "apa6"
+#output            : papaja::apa6_pdf
+output            :
+  papaja::apa6_pdf:
+      fig_crop: no
+      includes:
+        after_body: 
+          - "appendix.tex"
+#  papaja::apa6_word:
+#      fig_crop: no
+#      includes:
+#        after_body: 
+#          - "appendix.tex"
+ 
+  
+figsintext        : yes
+figurelist        : no
+tablelist         : no
+footnotelist      : no
+lineno            : no
+mask              : no
+
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{array}
+  - \usepackage{multirow}
+  - \usepackage{wrapfig}
+  - \usepackage{float}
+  - \usepackage{colortbl}
+  - \usepackage{pdflscape}
+  - \usepackage{tabu}
+  - \usepackage{threeparttable}
+  - \usepackage[normalem]{ulem}
+  - \usepackage[utf8]{inputenc}
+  - \usepackage[toc,page,header]{appendix}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(#echo = TRUE, 
+                      warning = FALSE, 
+                      message = FALSE
+                      )
+```
+
+
+```{r load_packages}
+library(knitr)
+library(magrittr)
+library(ggExtra)
+library(ggthemes)
+library(brms)
+library(papaja)
+library(citr)
+library(tidyverse)
+source("../functions/functions.R")
+theme_set(theme_few(base_size = 10))
+```
+
+```{r render_appendix, include=FALSE}
+render_appendix("appendix.Rmd")
+```
+
+
+```{r analysis_preferences}
+# Seed for random number generation
+set.seed(42)
+load(file="../data/VoiceLineUpOnline.Rda")
+d <- d[!duplicated(d$subj),]
+L1 <- d %>% count(L1eng) %>% pull(n)
+
+
+```
+
+
+
+# Experiment
+
+## Method
+
+### Participants
+
+
+`r (nrow(d))` participants took part in the experiment (`r table(d$sex)[1]` females, `r table(d$sex)[2]` males, `r length(which(is.na(d$sex)==TRUE))` unknown), with an age range of `r min(d$age, na.rm=T)`--`r max(d$age, na.rm=T)` years (median = `r median(d$age, na.rm=T)`, $SD$ = `r sd(d$age, na.rm=T)`). This sample contains `r L1[2]` native and `r L1[1]` non-native speakers of English. We will focus on data from both native speakers of English and non-native speakers. An analysis focusing on the subset of native speakers can be found in Appendix \ref{results-for-native-english-speakers-only}. Comparisons between native and non-native speakers of English can be found in Appendix \ref{first-language}.
+
+
+
+## Results
+
+Data were analysed in Bayesian linear mixed effects models [@gelman2014;@mcelreath2016statistical]. The R package brms [@brms1;@brms2] was used to model the data using the probabilistic programming language Stan [@carpenter2016stan;@hoffman2014no]. 
+
+Posterior probability distributions of the statistically inferred parameter values were determined for all conditions in the Parade (serial, sequential) $\times$ FA warning (strong, standard) $\times$ Target (present, absent) design. Our statistical inference was based on posterior (i.e. statistically inferred) quantities which allow for direct statistical inference. We summarised these quantities as the most probable posterior parameter value $\mu$ and the interval around $\mu$ that contains 95% of the posterior probability mass; 95% Highest Posterior Density Interval (henceforth, HPDI) for non-symmetric posteriors [@hyndman1996computing;@liu2015simulation] and probability intervals (henceforth, PI) for symmetric posteriors [@lambert2018student; @lee2014bayesian]. Throughout we present modeled data that allow for direct statistical inference.^[Models were fitted with weakly informative priors [see @mcelreath2016statistical] and run with 20,000 iterations on 3 chains with a warm-up of 10,000 iterations and no thinning. Model convergence was confirmed by the Rubin-Gelman statistic [@gelman1992] and inspection of the Markov chain Monte Carlo chains.]
+
+All models were fitted with maximal random effects structure [@barr2013random;@bates2015parsimonious] with random intercepts for different lineups and by-lineup slope adjustments for Target and FA warning. Parade type was not included as random slope adjustments because of substantial presentation differences between serial and sequential parades that we address in the next section.
+
+
+The advantages of using a Bayesian framework for hypothesis testing [@kruschke2012time; @kruschke2014doing] and parameter inference [@lambert2018student;@lee2014bayesian] is well documented in the literature.
+
+
+
+### Response accuracy
+
+The accuracy data were analyzed as binary responses (0 = incorrect, 1 = correct) in Bayesian linear mixed effects models with binomial link function. This analysis focuses on the inference of the conditional parameter values and the comparison of these values against the 10\% chance-level threshold where 10\% is the probability of marking a decision at random: $$\frac{1}{\text{presented voices} + \text{target absent option}} \cdot 100 = \frac{1}{9 + 1} \cdot 100 = 10\%$$
+
+
+
+```{r}
+source("scripts/get_accmodel_posterior.R")
+```
+
+Figure \ref{fig:probdist2} illustrates the modelled probability density distributions for the response accuracy separated by serial and sequential parades 
+and trials with strong and standard FA warning. Target absent and target present lineups indicate the bimodal distributions displayed in grey and yellow, respectively. Chance-level performance is indicated by the vertical dashed line.
+
+```{r warning = FALSE, fig4, fig.pos="!ht", fig.align = "center", fig.cap="\\label{fig:probdist2}The posterior probability density of the response accuracy for target absent and target present lineups displayed in grey and yellow, respectively. The posterior probability is shown by Parade type $\\times$ FA warning to illustrate the performance against chance-level (10\\%). The dashed line indicates chance-level performance."}
+#The horizontal bars indicate 95\\% HPDIs, the range containing the majority of the probability mass across target absent and target present trials.
+source("scripts/get_accuracy_plot.R")
+#p.dist
+path <- "../plots/online_probdist_byFA.pdf"
+include_graphics(path, dpi = 400)
+```
+
+The results indicates a high probability of incorrect decisions with a more diffuse probability density distribution in target present lineups indicating a large uncertainty about the true parameter value. The presence of the target voice in the lineups was associated with a higher accuracy of $\hat{\mu}$=`r target_diff$M[3]`% in a 95% HPDI of [`r (target_diff$lower[3])`%, `r target_diff$upper[3]`%] for serial parades with standard FA warnings. This difference was less substantial when strong FA warnings were provided ($\hat{\mu}$=`r target_diff$M[4]`%, 95% HPDI [`r (target_diff$lower[4])`%, `r target_diff$upper[4]`%]). The reverse was found for sequential parades: Target presence increased the response accuracy by  $\hat{\mu}$=`r target_diff$M[2]`% (95% HPDI [`r (target_diff$lower[2])`%, `r target_diff$upper[2]`%]) when strong FA warnings were provided with negligible evidence for a difference between target present and target absent trials for standard FA warnings ($\hat{\mu}$=`r target_diff$M[1]`%, 95% HPDI [`r (target_diff$lower[1])`%, `r target_diff$upper[1]`%]). 
+
+Figure \ref{fig:probdist2} shows that the response accuracy for all conditions is non-different from chance. In particular for target absent lineups we observe that the posterior probability mass is either embracing or concentrated below chance level indicating a high probability of incorrect identifications. From these distributions we can infer the posterior probability of below chance-level response accuracies (the posterior density on the left of the vertical dashed line in Figure \ref{fig:probdist2}). In other words, we can determine the probability of incorrect accusation (i.e. false-positives for target absent lineups) and missed targets (for target present lineups). The resulting probabilities are illustrated in Figure \ref{fig:prob_chance}. 
+
+
+
+```{r warning = FALSE, figchance, fig.pos="!ht", fig.align = "center", fig.cap="\\label{fig:prob_chance}The posterior probability of below chance-level (10\\%) responses for target absent and target present lineups displayed in grey and yellow, respectively."}
+source("scripts/get_below_chance_plot.R")
+path <- "../plots/prob_below_chance.pdf"
+include_graphics(path, dpi = 400)
+#chance_plot
+```
+
+Figure \ref{fig:prob_chance} shows that the target absent trials are associated with a higher probability of below chance-level responses compared to target present trials. In other words, false alarms are more likely than misses (i.e. incorrectly rejecting a trial that contains the target voice). Striking is the high probability of false-positives when strong FA warnings were presented in sequential parades and for standard FA warnings in serial parades. In particular, in serial parades the probability of below chance-level responses was `r (ppdif$p[3])`% lower but `r (ppdif$p[1])`% higher in sequential parades when strong FA warnings were provided. In other words, FA warnings have opposite effects on the probability of observing false-positives for serial compared to sequential parades. The difference for target present lineups was negligible. 
+
+
+
+### Confidence ratings
+
+```{r}
+source("scripts/get_confidence_posterior.R")
+```
+
+
+Confidence ratings (0 - 10) were analysed in cumulative mixed effects models for ordinal data [@liddell2018analyzing]. Accuracy was included as a nonlinear predictor with adjustments for chance following @burkner2019bayesian to prevent biases in the estimator. The posterior ratings show an overall high confidence. There was no evidence for any effects associated with response accuracy ($\hat{\mu}$=`r accconf[1]`, 95\% PI [`r accconf[2]`, `r accconf[3]`]). The posterior confidence ratings for FA warnings and Target presence can be found in Table \ref{tab:conf}. There was negligible evidence was differences between confidence ratings.
+
+
+```{r, results = 'asis'}
+conf_tab <- 
+conf %>%
+  pivot_wider(names_from = Parade, values_from = est:up) %>%
+  unite(col = seq, est_sequential, low_sequential, sep = " [") %>%
+  unite(col = serial, est_serial, low_serial, sep = " [") %>%
+  unite(col = seq, seq, up_sequential, sep = ", ") %>%
+  unite(col = serial, serial, up_serial, sep = ", ") %>%
+  mutate(seq = paste0(seq, "]"),
+         serial = paste0(serial, "]")) %>%
+  mutate(FA = c("standard warning", "", "strong warning", ""))
+
+names(conf_tab) <- c("Parade instruction", "Target presence", "Parade type: sequential", "Parade type:  serial")
+
+papaja::apa_table(conf_tab,
+                  align = c("l", "l", "r", "r"), 
+                  escape = FALSE, 
+                  placement = "h",
+                  caption = "\\label{tab:conf}Posterior confidence ratings with
+                  most probable parameter value and 95\\% probability intervals in brackets for serial parades and sequential parades by factors Parade instruction (strong warning, standard warning) and  Target presence (present, absent).")
+```
+
+
+
+
+
+# Parade comparison
+
+It is non-trivial to compare the results from serial and sequential parades for one fundamental difference: In serial but not in sequential parades, participants listen to all voices before making a decision; in sequential parades, a positive response terminates the trial. This procedural difference suggests higher memory demands for participants in serial parades. While in serial parades, participants have to choose between 9 voices and the target absent option, they do not know the total number of options (voices) to choose from in sequential parades but instead evaluate each voice against the preceding voice(s). In other words, we would expect that the position of a voice in a lineup impacts on participants' responses in sequential but less so in serial parades. This comparison is illustrated in Figure \ref{fig:figseqacc}. For each lineup position (Lineup ID) participants made a response that is either correct or incorrect. Colour was used to distinguish between serial and sequential parades. Solid lines indicate data with and dotted lines without false alarm warning. As for sequential parades only data until the first positive response were considered, we indicate the number of observations with the size of dots. Data are shown for target absent lineups in the upper panel and target present lineups in the lower panel.
+
+
+```{r warning = FALSE, figseqacc, fig.width=8, fig.height=6, fig.pos="!ht", fig.align = "center", fig.cap="\\label{fig:seqacc}Observed response accuracy. Errorbars show 1$\\times$SEs. Response accuracy is shown by Lineup ID, the position of a voice in the lineup. Dot size indicate the number of observations. Response accuracy is shown by Target presence and Parade instructions."}
+source("scripts/get_process_accuracy.R")
+#plotsm
+path <- "../plots/seqaccmixed.pdf"
+include_graphics(path, dpi = 400)
+```
+
+
+There are two indicators of order-related differences between sequential and serial parades. We observed a lower accuracy for sequential parades, first, for voice 3 (and subsequent voices) in lineups without target voice, and second, for voice 4 and 5 in lineups that contain the target voice. This may be understood as indicator for increasing pressure to make a positive response in sequential parades and / or as resulting from an distribution of responses over all voices in serial parades. 
+
+Returning to the comparison of serial and sequential parades: From a statistical point of view, it is difficult to determine an accurate chancel-level threshold for participants that are tested in a sequential parade. The chance-level threshold used before derived from the number of correct options (1) over the sum of the number of possible candidate voices $x$ and the target absent option (1): $\frac{1}{x + 1} \cdot 100$.
+
+For serial parades $x=9$, so the chance-level is $\frac{1}{9 + 1} \cdot 100 = 10\%$. This is not the case for sequential parades. In sequential parades, participants made a binary decision for each voice but were also aware that only the first positive response is considered. For the first voice in a sequential lineup, the probability of guessing correctly is $\frac{1}{2} \cdot 100 = 50\%$ as the number of response option is 2 (whether or not the voice is the target). If this decision for each voice in the lineup was independent of previous decision, this chance-level threshold would be the same for all 9 voices. However, to be able precede to a voice in the lineup, the previous voice(s) required a negative (non-target voice) response. Therefore the decisions are non-independent. The probability of making two non-independent correct decisions by chance is the product of the each decision individually: $\frac{1}{2} \cdot \frac{1}{2} \cdot 100 = 25\%$ (or $(\frac{1}{2})^2$). In other words, the probability of making $x$ binary decision correctly by chance is $(\frac{1}{2})^x \cdot 100$ where $x$ is the position of the voice in a sequential lineup. For example, the probability of guess three voices in a sequence correctly is $(\frac{1}{2})^3 \cdot 100$ = `r as.character(round(.5^3*100, 1))`%. 
+
+Note, that this entails that, for sequential parades, participants would have to correctly reject all 9 voices to correctly indicate the target voice as absent which has a chance-level of $(\frac{1}{2})^9 \cdot 100$ $\approx$ `r as.character(round(.5^9*100,3))`%. In the present design this is indistinguishable from strategic negative responses (e.g. 
+pressing absent but not attending to voices at all; not committing to a voice). To avoid this, we can distinguish between whether a voice was identified as target voice (positive response) or not (negative response) rather than response accuracy.  This approach is useful as positive responses flag up strategic decisions while response accuracy for negative responses can be the result of response strategies in lineups that do not contain the target voice. Further this consideration highlights the instances in which a voice was identified as target; this is arguably more directly related to the responses made by the participants without classifying responses as either correct or incorrect, similar to the standard treatment in signal detection theory models [@decarlo2010statistical].
+
+Our analysis of response accuracy for voice lineups under different conditions in the previous sections is on a par with previous studies that compared sequential and serial parades by determining participants chance-level response accuracy for the entire lineup. However, the chance-level thresholds must be different for sequential parades, in which a positive respond often proceeds exposure to all voices, compared to serial parades, in which participants are exposed to all voices prior to their response. We suggested that for a comparison between sequential and serial parades we need to take into account the difference in how parades were presented to participants or, in other words, how participants were asked to respond to the lineups. Further, instead of response accuracy, a distinction between positive and negative responses allows us to assess the quality of serial and sequential voice parades. This is because the aim of the voice parade should be to reduce the number of incorrect accusations. In other words, the number of false positives should be ensured to be as low as possible, as each false positive could lead to an unjustified prosecution. A more direct way of looking at this is by determining the probability of identifying a voice as target voice (i.e. positive responses). In the following we present a statistical analysis that takes these features of the voice parade into account.
+
+
+
+## Positive response probability
+
+As alternative to the analysis of the response accuracy in previous section, ordinal models can be used to infer the probability of selecting on of the different ordinal response categories (i.e. voices in the lineup; 1-9 or target absent). Because of the differences between serial and sequential models with regards to how voices were presented and how participants were allowed to respond, we used two different types of ordinal models. 
+
+Models were used to account for two essential differences between parades. First, in serial parades, but not in sequential parades, participants listened to all voices before responding. In other words, participants knew the total number of response options. Cumulative ordinal model were used to model data from serial parades. Second, in sequential parades a participant's response to a particular voice is conditional on negative responses to all preceding voices. For example, responding to the third voice required a negative response to voice one and two; a positive response terminates the decision process. This property is accounted for by sequential process models [@burkner2018ordinal;@tutz1997sequential]. 
+
+Sequential process models, in contrast to cumulative ordinal models, do not have an explicit upper bound for the response scale. This is important because any positive response terminates the decision process unless no positive response as made at all; the parade terminates after voice 9. This is important as participants were aware of the total number of options in serial parades but not in sequential parades. Target present responses varied from 1-9 but only in serial parades, participants made explicit target absent responses. We labelled target absent responses as 10 for convenience; in sequential parades, in which no explicit target absent response was given, target absent responses were implied by a negative response to voice 9.
+
+Both types of ordinal models were fitted in generalized Bayesian models [brms R-package; @burkner2018ordinal;@brms1]. Sequential models were fitted the distribution family sratio with cloglog link-function and ordinal models were fitted with the family cumulative with probit link-function. 
+
+
+
+
+### Model fit
+
+Models for serial and sequential parades were fitted separately with the selected lineup voice ID (1-9, 10 for target absent responses) as response variable and as predictor variables the expected response (Target present: 3, 7; Target absent: 10) and FA warning (strong warning, standard warning).
+
+As responses should, to some extent, depend on the whether the target voice was voice 3 or 7 (or absent), we fitted additional models with category-specific effects for the predictor expected response. This takes into account that this predictor might have a different effect on the response categories. We tested whether category-specific effects increased the predictive performance of the model. This was assessed in out-of-sample predictions estimated using Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) [@vehtari2015pareto; @vehtari2017practical]. Predictive performance was estimated as the sum of the expected log pointwise predictive density ($\widehat{elpd}$). The difference between the predictive quality of the models expressed as $\Delta\widehat{elpd}$. The results of the model comparisons can be found in Table \ref{tab:modelcomparisons}. The $\Delta\widehat{elpd}$ values show the difference compared to the best fitting model (top row for each serial and sequential parades). FA warnings showed negligible evidence for increased model performance in serial and sequential parades. Category-specific effects increased the model fit for sequential parades but not for serial parades.
+
+**NOTE:** I'd omit the model comparisons. This is because it doesn't add much. We do not have enough data to make strong claims based on model comparisons. I think more interesting should be the inferred data in the next subsection.
+
+
+```{r}
+#dir("../stanout/", pattern = "loo")
+file_out <- "../stanout/loo_results_serial_acat.csv"
+serial <- read_csv(file_out) %>% mutate(Parade = "Serial") 
+file_out <- "../stanout/loo_results_sequential_sratio.csv"
+seq <- read_csv(file_out) %>% mutate(Parade = "Sequential")
+
+bind_rows(serial, seq) %>%
+  select(model, elpd_diff, se_diff, elpd_loo, se_elpd_loo) %>%
+  rename(formula = model) %>%
+  mutate_if(is.numeric, round, 1) %>%
+  unite(col = "diff", c(elpd_diff, se_diff), sep = " (") %>%
+  unite(col = "fit", c(elpd_loo, se_elpd_loo), sep = " (") %>%
+  mutate_at(c("diff", "fit"), paste0, ")") %>%
+  mutate(formula = gsub("responses", "Lineup ID", formula),
+         formula = gsub("TP", "Target", formula),
+         formula = gsub("FA", "Parade instruction", formula),
+         formula = gsub("resp_expec", "Expected response", formula),
+         formula = gsub("corr_response", "Response accurate", formula),
+         formula = gsub("1 \\+", "", formula),
+         formula = gsub("1", "Null model", formula)) -> mc
+
+names(mc) <- c("Formula", "$\\Delta\\widehat{elpd}$", "$\\widehat{elpd}$")
+```
+
+```{r, results = 'asis'}
+papaja::apa_table(mc,
+                  align = c(rep("l", 1), rep("r", 2)), 
+                  escape = FALSE, 
+                  placement = "h",
+                  added_stub_head = "Parade type",
+                  row.names = T,
+                  stub_indents = list(`Serial` = c(1:3), `Sequential`= 4:6),
+                  note = "Standard errors are shown in parentheses. Category-specific effects are indicated cs.",
+                  caption = "\\label{tab:modelcomparisons}Model comparisons of ordinal models for response probability. Predictive performance was indicated as expected log pointwise predictive density ($\\widehat{elpd}$). The top row of each serial and sequential parades shows the models with the highest predictive performance with differences ($\\Delta\\widehat{elpd}$) relative to the model with the highest predictive performance.")
+```
+
+
+
+### Model outcome
+
+The results are shown in Figure \ref{fig:seqmodel}. Shown is the statistically inferred probability to respond with each lineup voice ID. These probabilities are shown separately for parades in which the target was voice 3, 7 or absent. The response probability for sequential parades is shown in Figure \ref{fig:seqmodel}a; Figure \ref{fig:seqmodel}b shows the response probability for serial parades. 
+
+
+
+```{r warning = FALSE, figseqmodel, fig.width=8, fig.height=6, fig.pos="!ht", fig.align = "center", fig.cap="\\label{fig:seqmodel}Probability of responses modelled in ordinal models. Errorbars show 95\\% PIs, the range containing the majority of the probability mass. Target absent responses were labelled 10."}
+#source("scripts/get_data_ordinal_models.R")
+source("scripts/get_posterior_ordinal_models_cs.R")
+#plotsm
+path <- "../plots/smplotmixed.pdf"
+include_graphics(path, dpi = 400)
+```
+
+These results highlight differences between serial and sequential parades that are associated with the presentation design (i.e. voice order). The response probability for voices early in the lineups is higher for sequential parades compared to serial parades leading to a higher false positives. In particular, voice 3 was frequently chosen in the target absent condition which can only be explained as order effect. Target voice 7 has a low probability to be identified correctly; in fact the probability to select voice 7 is non-different in target present and target absent lineups. The target voices (3, 7) have a slightly higher probability than others voices to be chosen. Target absent decisions do not differ for target present and target absent trials. 
+
+
+
+
+
+
+
+
+
+
+\newpage
+
+# References
+```{r create_r-references, echo=FALSE}
+r_refs(file = "ref.bib")
+```
+
+\begingroup
+\setlength{\parindent}{-0.5in}
+\setlength{\leftskip}{0.5in}
+
+<div id = "refs"></div>
+\endgroup
+
+

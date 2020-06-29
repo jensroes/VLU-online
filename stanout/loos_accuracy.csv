@@ -1,0 +1,5 @@
+model,elpd_diff,se_diff,elpd_loo,se_elpd_loo
+loo_accnlfullmodel,0,0,-176.13,11.95
+loo_accnlmodel,-0.79,0.72,-176.92,12.06
+loo_fullaccmodel,-4.15,3.06,-180.29,13.07
+loo_acccondmodel,-7.22,4.69,-183.36,13.87

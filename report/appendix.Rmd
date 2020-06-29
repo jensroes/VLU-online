@@ -1,0 +1,95 @@
+
+```{r}
+load(file="../data/VoiceLineUpOnline.Rda")
+d <- d[!duplicated(d$subj),]
+```
+
+
+# Results for native English speakers only
+
+In this section we present the results for those participants in our sample who were native speakers of English.
+
+
+## Response accuracy
+
+The accuracy data were analysed as binary responses (0 = incorrect, 1 = correct) in Bayesian linear mixed effects models with binomial link function. Figure \ref{fig:probdist2L1} illustrates the response-accuracy probability distributions for all conditions. Target absent and target present lineups indicate the bimodal distributions displayed in grey and yellow, respectively. Chance-level is indicated as vertical dashed line.
+
+
+
+```{r warning = FALSE, figL1, fig.pos="!ht", fig.align = "center", fig.cap="\\label{fig:probdist2L1}The posterior probability density of the response accuracy for target absent and target present lineups displayed in grey and yellow, respectively for L1 English participants. The posterior probability is shown by Parade type $\\times$ FA warning to illustrate the performance against chance-level (10\\%). The dashed line indicates chance-level performance."}
+source("scripts/get_accmodel_posterior_L1.R")
+source("scripts/get_accuracy_plot_L1.R")
+#p.dist
+path <- "../plots/online_probdist_byFA_L1.pdf"
+include_graphics(path, dpi = 400)
+```
+
+The results indicates a high probability of incorrect decisions with a more diffuse probability density distribution in target present lineups indicating a large uncertainty about the true parameter value. The presence of the target voice in lineups lead to a higher accuracy of $\hat{\mu}$=`r target_diff$M[3]`% (95% HPDI [`r (target_diff$lower[3])`%, `r target_diff$upper[3]`%]) for serial parades when standard FA warnings were provided. This difference was negligible for strong FA warnings ($\hat{\mu}$=`r target_diff$M[4]`%, 95% HPDI [`r (target_diff$lower[4])`%, `r target_diff$upper[4]`%]). In sequential parades, target presence did not substantially increase response accuracy neither when strong ($\hat{\mu}$=`r target_diff$M[2]`%, 95% HPDI [`r (target_diff$lower[2])`%, `r target_diff$upper[2]`%]) nor when standard FA warnings ($\hat{\mu}$=`r target_diff$M[1]`%, 95% HPDI [`r (target_diff$lower[1])`%, `r target_diff$upper[1]`%]) were provided.
+
+Figure \ref{fig:probdist2L1} shows that for target absent trials we observe a large amount of posterior probability mass either centered around or concentrated below chance-level indicating a high probability of incorrect identifications. From these distributions we inferred the posterior probability of below chance-level response accuracies. The resulting values are illustrated in Figure \ref{fig:prob_chanceL1}. 
+
+
+
+
+
+```{r warning = FALSE, figchanceL1, fig.pos="!ht", fig.align = "center", fig.cap="\\label{fig:prob_chanceL1}The posterior probability of below chance-level (10\\%) responses for target absent and target present lineups displayed in grey and yellow, respectively (L1 English participants)."}
+source("scripts/get_below_chance_plot_L1.R")
+path <- "../plots/prob_below_chance_L1.pdf"
+include_graphics(path, dpi = 400)
+#chance_plot
+```
+
+Figure \ref{fig:prob_chance} shows that target absent trials are associated with a higher probability of below chance-level responses compared to target present trials. The probability of below chance-level responses was highest for target absent trials when strong FA warnings were presented in sequential parades and for standard FA warnings in serial parades. In particular, in serial parades the probability of below chance-level responses was `r (ppdif$p[3])`% lower but `r (ppdif$p[1])`% higher in sequential parades when strong FA warnings were provided. In other words, FA warnings have opposite effects on the probability of observing false-positives for serial compared to sequential parades. This difference for target present lineups was substantially smaller, i.e. `r (ppdif$p[2])`% for sequential parades and `r (ppdif$p[4])`% for serial parades.
+
+
+
+### Confidence ratings
+
+```{r}
+source("scripts/get_confidence_posterior_L1.R")
+```
+
+Confidence ratings (0 - 10) were analysed in cumulative mixed effects models for ordinal data. Accuracy was included as a nonlinear predictor with adjustments for chance to prevent possible biases in the estimator. The posterior ratings show an overall high confidence. There was no evidence for any effects associated with response accuracy ($\hat{\mu}$=`r accconf[1]`, 95\% PI [`r accconf[2]`, `r accconf[3]`]). The posterior confidence ratings can be found in Table \ref{tab:confL1}. The evidence for differences between conditions is negligible.
+
+
+```{r, results = 'asis'}
+conf_tab <- conf %>%
+  pivot_wider(names_from = Parade, values_from = est:up) %>%
+  unite(col = seq, est_sequential, low_sequential, sep = " [") %>%
+  unite(col = serial, est_serial, low_serial, sep = " [") %>%
+  unite(col = seq, seq, up_sequential, sep = ", ") %>%
+  unite(col = serial, serial, up_serial, sep = ", ") %>%
+  mutate(seq = paste0(seq, "]"),
+         serial = paste0(serial, "]")) %>%
+  mutate(FA = c("standard warning", "", "strong warning", ""))
+
+names(conf_tab) <- c("Parade instruction", "Target presence", "Parade type: sequential", "Parade type:  serial")
+
+papaja::apa_table(conf_tab,
+                  align = c("l", "l", "r", "r"), 
+                  escape = FALSE, 
+                  placement = "h",
+                  caption = "\\label{tab:confL1}L1 English participants. Posterior confidence ratings with
+                  most probable parameter value and 95\\% probability intervals in brackets for serial parades and sequential parades by factors Parade instruction (warning, no warning) and Target presence (present, absent).")
+
+```
+
+
+
+
+
+
+# First language
+
+The response accuracy and confidence ratings might be affected by whether or not the participant was a native speaker of English. To account for this possibility we modelled the response accuracy and confidence ratings in Bayesian models as described in the results section. The predictor variable was L1 (1 = English, 0 = Others). Figure \ref{fig:postL1} shows the outcome of both models. Figure \ref{fig:postL1}a shows the posterior distribution of response accuracies, indicating that response accuracy for other first languages than English was distributed tighter around chance level. Figure \ref{fig:postL1}b shows the confidence ratings as a function of response accuracy by first language. The results show that participants with a different first language than English responded with a slightly lower confidence, in particular for incorrectly judged lineups. Overall there is negligible evidence for systematic differences between native and non-native speakers of English.
+
+```{r figconfL1, fig.pos="!ht",  fig.align = "center", fig.cap="\\label{fig:postL1}Posterior distribution by first language. Panel (a) shows the distribution of the response accuracy relative to chance-level indicated by the dashed line. Panel (b) shows the confidence ratings as a function of response accuracy. The lines indicate $\\hat{\\mu}$, the most probable parameter value, and error ribbons show 95\\% PIs."}
+
+source("scripts/get_L1_results.R")
+#path <- "../plots/L1engplot.pdf"
+#include_graphics(path, dpi = 400)
+```
+
+
+
+
