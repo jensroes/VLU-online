@@ -235,8 +235,6 @@ Models for serial and sequential parades were fitted separately with the selecte
 
 As responses should, to some extent, depend on the whether the target voice was voice 3 or 7 (or absent), we fitted additional models with category-specific effects for the predictor expected response. This takes into account that this predictor might have a different effect on the response categories. We tested whether category-specific effects increased the predictive performance of the model. This was assessed in out-of-sample predictions estimated using Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) [@vehtari2015pareto; @vehtari2017practical]. Predictive performance was estimated as the sum of the expected log pointwise predictive density ($\widehat{elpd}$). The difference between the predictive quality of the models expressed as $\Delta\widehat{elpd}$. The results of the model comparisons can be found in Table \ref{tab:modelcomparisons}. The $\Delta\widehat{elpd}$ values show the difference compared to the best fitting model (top row for each serial and sequential parades). FA warnings showed negligible evidence for increased model performance in serial and sequential parades. Category-specific effects increased the model fit for sequential parades but not for serial parades.
 
-**NOTE:** I'd omit the model comparisons. This is because it doesn't add much. We do not have enough data to make strong claims based on model comparisons. I think more interesting should be the inferred data in the next subsection.
-
 
 ```{r}
 #dir("../stanout/", pattern = "loo")
